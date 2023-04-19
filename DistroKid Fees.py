@@ -1,7 +1,16 @@
+import requests
+
+api_url = "https://openexchangerates.org/api/latest.json"
+api_key = "16d276ef8cd644b7b8ad05f84c52945a"
+
+
 while True:
     try:
-        # prompt the user to enter the current USD to GBP conversion rate
-        usd_to_gbp = float(input("Enter the current USD to GBP conversion rate: "))
+        # make an API request for the latest exchange rates
+        response = requests.get(f"{api_url}?app_id={api_key}")
+
+        # parse the response to get the USD to GBP rate
+        usd_to_gbp = response.json()["rates"]["GBP"]
 
         # prompt the user to enter the amount of money they wish to withdraw
         withdrawal_amount = float(input("Enter the amount of money you wish to withdraw: "))
@@ -29,3 +38,4 @@ while True:
         repeat = input("Do you want to perform another calculation? (y/n) ")
         if repeat.lower() != "y":
             break
+

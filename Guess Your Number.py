@@ -18,7 +18,7 @@ while running:
 import random
 
 def main():
-    print("i will try to guess your number!")
+    print("I will try to guess your number!")
     print("Please enter a number between 1 and 10")
     user_number = int(input())
     ai_number = random.randint(1,10)
