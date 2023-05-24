@@ -1,47 +1,57 @@
 import requests
 
-api_url = "https://openexchangerates.org/api/latest.json"
-api_key = "16d276ef8cd644b7b8ad05f84c52945a"
+API_URL = "https://openexchangerates.org/api/latest.json"
+API_KEY = "16d276ef8cd644b7b8ad05f84c52945a"
 
-while True:
+
+def get_exchange_rate():
     try:
-        # make an API request for the latest exchange rates
-        response = requests.get(f"{api_url}?app_id={api_key}")
-
-        # check if the API request was successful
+        response = requests.get(f"{API_URL}?app_id={API_KEY}")
         if response.status_code == 200:
-            # parse the response to get the USD to GBP rate
-            usd_to_gbp = response.json()["rates"]["GBP"]
-        else:
-            raise Exception("API request failed")
-
+            return response.json()["rates"]["GBP"]
+        raise Exception("API request failed")
     except (requests.RequestException, KeyError, Exception):
-        # handle API request failure by asking the user for the conversion rate manually
-        usd_to_gbp = float(input("Enter the USD to GBP conversion rate: "))
+        return None
 
-    try:
-        # prompt the user to enter the amount of money they wish to withdraw
-        withdrawal_amount = float(input("Enter the amount of money you wish to withdraw: "))
 
-        # calculate the amount of money received from the bank transfer
-        bank_fee = 5.00
-        bank_amount_usd = withdrawal_amount - bank_fee
-        bank_amount_gbp = round(bank_amount_usd * usd_to_gbp, 2)
+def calculate_bank_transfer_amount(withdrawal_amount, usd_to_gbp):
+    bank_fee = 5.00
+    bank_amount_usd = withdrawal_amount - bank_fee
+    bank_amount_gbp = round(bank_amount_usd * usd_to_gbp, 2)
+    return bank_amount_gbp
 
-        # calculate the amount of money received from the PayPal transfer
-        paypal_fee = min(withdrawal_amount * 0.02 + 1.00, 21.00)
-        paypal_amount_usd = withdrawal_amount - paypal_fee
-        paypal_amount_gbp = round(paypal_amount_usd * usd_to_gbp, 2)
 
-        # determine which transfer method to use
-        if bank_amount_gbp > paypal_amount_gbp:
-            print(f"Use the bank transfer method. You will receive £{bank_amount_gbp}. This is £{round(bank_amount_gbp - paypal_amount_gbp, 2)} GBP more than with PayPal.")
-        else:
-            print(f"Use the PayPal transfer method. You will receive £{paypal_amount_gbp}. This is £{round(paypal_amount_gbp - bank_amount_gbp, 2)} GBP more than with the bank transfer.")
+def calculate_paypal_transfer_amount(withdrawal_amount, usd_to_gbp):
+    paypal_fee = min(withdrawal_amount * 0.02 + 1.07, 24.00)
+    paypal_amount_usd = withdrawal_amount - paypal_fee
+    paypal_amount_gbp = round(paypal_amount_usd * usd_to_gbp, 2)
+    return paypal_amount_gbp
 
-    except ValueError:
-        print("Invalid input. Please try again.")
 
-    repeat = input("Do you want to perform another calculation? (y/n) ")
-    if repeat.lower() != "y":
-        break
+def main():
+    while True:
+        usd_to_gbp = get_exchange_rate()
+        if usd_to_gbp is None:
+            usd_to_gbp = float(input("Enter the USD to GBP conversion rate: "))
+
+        try:
+            withdrawal_amount = float(input("Enter the amount of money you wish to withdraw: "))
+
+            bank_amount_gbp = calculate_bank_transfer_amount(withdrawal_amount, usd_to_gbp)
+            paypal_amount_gbp = calculate_paypal_transfer_amount(withdrawal_amount, usd_to_gbp)
+
+            if bank_amount_gbp > paypal_amount_gbp:
+                print(f"Use the bank transfer method. You will receive £{bank_amount_gbp}. The payout with PayPal would have been £{paypal_amount_gbp}.")
+            else:
+                print(f"Use the PayPal transfer method. You will receive £{paypal_amount_gbp}. The payout with the bank transfer would have been £{bank_amount_gbp}.")
+
+        except ValueError:
+            print("Invalid input. Please try again.")
+
+        repeat = input("Do you want to perform another calculation? (y/n) ")
+        if repeat.lower() != "y":
+            break
+
+
+if __name__ == "__main__":
+    main()
