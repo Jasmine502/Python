@@ -4,8 +4,16 @@ import openai
 import os
 from dotenv import load_dotenv
 
-# Load environmental variables from .env file
-load_dotenv()
+
+# Get the user's home directory
+home_dir = os.path.expanduser("~")
+
+# Specify the path to your .env file in the Documents folder
+dotenv_path = os.path.join(home_dir, "Documents", ".env")
+
+# Load environmental variables from the specified path
+load_dotenv(dotenv_path)
+
 
 # Set up pyttsx3 engine
 engine = pyttsx3.init()
