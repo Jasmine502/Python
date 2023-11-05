@@ -1,102 +1,37 @@
 import pyttsx3
 import re
 import openai
-import os
-from dotenv import load_dotenv
-
-
-# Get the user's home directory
-home_dir = os.path.expanduser("~")
-
-# Specify the path to your .env file in the Documents folder
-dotenv_path = os.path.join(home_dir, "Documents", ".env")
-
-# Load environmental variables from the specified path
-load_dotenv(dotenv_path)
-
-
-# Set up pyttsx3 engine
-engine = pyttsx3.init()
 
 # Constants
 MODEL_NAME = "gpt-3.5-turbo"
-
-# Voice mapping dictionary
+API_KEY = "     "  # ENTER API KEY HERE
 VOICE_MAPPING = {
     "Zira": 0,
     "Hazel": 1
 }
+RE_STAGE_DIRECTIONS = re.compile(r'\([^)]*\)|\[.*?\]|\*.*?\*')
+
+# Initialize OpenAI API key
+openai.api_key = API_KEY
+
+# Set up pyttsx3 engine and configure it only once
+engine = pyttsx3.init()
+voices = engine.getProperty('voices')
+voice_ids = {voice.name: voice.id for voice in voices}
 
 def main():
     try:
-        check_api_key()
-
         print_intro()
-
         episode_number = 1
+
         while True:
-            topic = input(f"Enter the topic for episode {episode_number}: ")
-            print("Preparing episode...\n")
-
-            # Prepare conversation structure
-            conversation = [
-                {"role": "system", "content": "You are to craft a humorous dialogue showcasing the contrasting personalities of Zira and Hazel, who are roommates. Zira, an assertive, outspoken American, "
-                                             "often dominates conversations with her audacious demands, while British Hazel, trying to be easy-going and kind-hearted, responds with sarcastic retorts or barely "
-                                             "concealed annoyance. Your dialogue should be lively and authentic, reflecting the dynamics between two friends who cherish yet irk each other. "
-                                             "The script should be written in the following format: \"Zira: <dialogue> Hazel: <dialogue>\", with each new line of dialogue not necessarily alternating between characters. "
-                                             "Refrain from including stage directions or any elements beyond the speaker's name and dialogue. The conversation should revolve around a user-provided topic."},
-                {"role": "user", "content": f"Write episode {episode_number} about: {topic}"}
-            ]
-
-            response = openai.ChatCompletion.create(
-                model=MODEL_NAME,
-                messages=conversation
-            )
-
-            dialogue = response.choices[0].message['content']
-            dialogue = remove_stage_directions(dialogue)  # Remove stage directions
-
-            # Save dialogue to script file
-            with open('script.txt', 'w') as f:
-                f.write(dialogue)
-
-            print("\nScript written. Time to roll!\n")
-
-            # Speak dialogue from the script with subtitles
-            with open('script.txt') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        parts = line.split(': ', 1)
-                        if len(parts) == 2:
-                            speaker, dialogue = parts
-                            speak_dialogue(speaker, dialogue)
-                        else:
-                            print(line)
-                print("\n" + "-" * 40)
-
+            handle_episode(episode_number)
             episode_number += 1
 
+    except KeyboardInterrupt:
+        print("Program terminated by the user.")
     except Exception as e:
-        print("An error occurred:", str(e))
-
-def check_api_key():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if api_key is None or api_key.strip() == "":
-        while True:
-            api_key = input("No API key detected. Please enter your OpenAI API key: ").strip()
-            if api_key:
-                save_api_key(api_key)
-                openai.api_key = api_key
-                break
-            else:
-                print("API key cannot be empty. Please try again.")
-    else:
-        openai.api_key = api_key
-
-def save_api_key(api_key):
-    with open('.env', 'a') as f:
-        f.write(f"OPENAI_API_KEY={api_key}\n")
+        print(f"An error occurred: {e}")
 
 def print_intro():
     intro = (
@@ -105,24 +40,44 @@ def print_intro():
     )
     print(intro)
 
-def speak_dialogue(speaker, dialogue):
-    voices = engine.getProperty('voices')
+def handle_episode(episode_number):
+    topic = input(f"Enter the topic for episode {episode_number}: ")
+    print("Preparing episode...\n")
 
-    if speaker in VOICE_MAPPING:
-        voice_index = VOICE_MAPPING[speaker]
-        target_voice = voices[voice_index]
-        engine.setProperty('voice', target_voice.id)
+    conversation = prepare_conversation(episode_number, topic)
+    response = openai.ChatCompletion.create(model=MODEL_NAME, messages=conversation)
+    dialogue = remove_stage_directions(response.choices[0].message['content'])
 
-    print(f"\n{speaker}: {dialogue}")  # Print subtitles
-    engine.say(dialogue)
-    engine.runAndWait()
+    print("\nScript written. Time to roll!\n")
+    speak_dialogue(dialogue)
+
+def prepare_conversation(episode_number, topic):
+    return [
+        {"role": "system", "content": "You are to craft a humorous dialogue showcasing the contrasting personalities of Zira and Hazel, who are roommates. Zira, an assertive, outspoken American, "
+                                             "often dominates conversations with her audacious demands, while British Hazel, trying to be easy-going and kind-hearted, responds with sarcastic retorts or barely "
+                                             "concealed annoyance. Your dialogue should be lively and authentic, reflecting the dynamics between two friends who cherish yet irk each other. "
+                                             "The script should be written in the following format: \"Zira: <dialogue> Hazel: <dialogue>\", with each new line of dialogue not necessarily alternating between characters. "
+                                             "Refrain from including stage directions or any elements beyond the speaker's name and dialogue. The conversation should revolve around a user-provided topic."},
+                {"role": "user", "content": f"Write episode {episode_number} about: {topic}"}
+    ]
+
+def speak_dialogue(dialogue):
+    for line in dialogue.split('\n'):
+        if line:
+            speaker, line_dialogue = line.split(': ', 1)
+            set_voice(speaker)
+            print(f"\n{speaker}: {line_dialogue}")
+            engine.say(line_dialogue)
+            engine.runAndWait()
+
+def set_voice(speaker):
+    voice_index = VOICE_MAPPING.get(speaker)
+    if voice_index is not None:
+        engine.setProperty('voice', voices[voice_index].id)
+
 
 def remove_stage_directions(text):
-    # Remove stage directions enclosed in brackets or asterisks
-    text = re.sub(r'\([^)]*\)', '', text)    # Remove anything inside parentheses
-    text = re.sub(r'\[.*?\]', '', text)      # Remove anything inside square brackets
-    text = re.sub(r'\*.*?\*', '', text)      # Remove anything inside asterisks
-    return text
+    return RE_STAGE_DIRECTIONS.sub('', text)
 
 if __name__ == "__main__":
     main()

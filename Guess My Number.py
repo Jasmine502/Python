@@ -17,44 +17,38 @@ while running:
 
 import random
 
-def main():
-    print("Hey! I thought of a number between 1 and 10!\nCan you guess it?"
-          "\nYou have 3 tries!")
+def get_user_guess():
+    while True:
+        try:
+            return int(input("What's your guess, darling? "))
+        except ValueError:
+            print("That's not a number I recognize... Try again.")
+
+def play_game():
     number = random.randint(1, 10)
-    guess = int(input("What is your guess? "))
-    count = 1
-    while guess != number and count < 3:
-        if guess > number:
-            print("Too high!")
-        else:
-            print("Too low!")
-        guess = int(input("What is your guess? "))
+    print("I've got a number between 1 and 10 in mind.\nYou've got three shots to guess it.")
+    count = 0
+    while count < 3:
+        guess = get_user_guess()
         count += 1
-    if guess == number:
-        print("You got it!")
-    else:
-        print("You lose!")
-    print("The number was", number)
-    again = input("Would you like to play again? (y/n) ")
-    while again == "y":
-        print("Hey! I thought of a number between 1 and 10!\nCan you guess it?"
-              "\nYou have 3 tries!")
-        number = random.randint(1, 10)
-        guess = int(input("What is your guess? "))
-        count = 1
-        while guess != number and count < 3:
-            if guess > number:
-                print("Too high!")
-            else:
-                print("Too low!")
-            guess = int(input("What is your guess? "))
-            count += 1
         if guess == number:
-            print("You got it!")
+            print("Impressive... You've got it!")
+            return True
+        elif guess > number:
+            print("Too high, try to lower your sights.")
         else:
-            print("You lose!")
-        print("The number was", number)
-        again = input("Would you like to play again? (y/n) ")
-    print("Thanks for playing!")
+            print("Too low, aim a bit higher.")
+        print(f"Attempt {count}/3")
+    print(f"Oh, out of tries. It was {number}.")
+    return False
+
+def main():
+    print("Hey there, ready to play a guessing game?")
+    while True:
+        play_game()
+        again = input("Feeling lucky? Want to go again? (y/n) ").lower()
+        if again != 'y':
+            break
+    print("Thanks for playing with me. Ta-ta!")
 
 main()

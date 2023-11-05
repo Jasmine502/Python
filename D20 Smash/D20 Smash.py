@@ -1,71 +1,65 @@
-# Import modules
-import random
+from random import sample
+from pathlib import Path
 import pyttsx3
 import time
 
-# Constants
-PENALTIES_FILE = "penalties.txt"
-ADVANTAGES_FILE = "advantages.txt"
-YOU_SD_PENALTY = "SEPPUKU: YOU SD 2 STOCKS"
-YOU_PICK_DICE_PENALTY = "YOU DECIDE: YOU PICK OPPONENT'S DICE NUMBER, AFTER CHARACTERS ARE CHOSEN"
+class GameRules:
+    PENALTIES_FILE = Path("penalties.txt")
+    ADVANTAGES_FILE = Path("advantages.txt")
+    YOU_SD_PENALTY = "SEPPUKU: YOU SD 2 STOCKS"
+    YOU_PICK_DICE_PENALTY = "YOU DECIDE: YOU PICK OPPONENT'S DICE NUMBER, AFTER CHARACTERS ARE CHOSEN"
 
-# Initialize text-to-speech engine
-engine = pyttsx3.init()
+    def __init__(self):
+        self.engine = pyttsx3.init()
 
-# Function to read rules from a file
-def read_rules(filename):
-    try:
-        with open(filename, 'r') as file:
-            rules = [line.strip() for line in file]
-        return rules
-    except FileNotFoundError:
-        print(f"Error: {filename} not found.")
-        return []
+    def read_rules(self, filename):
+        if not filename.exists():
+            print(f"Error: {filename} not found.")
+            return []
 
-# Function to get random rules from files
-def get_random_rules():
-    penalties = read_rules(PENALTIES_FILE)
-    advantages = read_rules(ADVANTAGES_FILE)
-    return random.sample(penalties, 9), random.sample(advantages, 9)
+        with filename.open('r') as file:
+            return [line.strip() for line in file]
 
-# Function to announce rule using text-to-speech
-def announce_rule(rule):
-    engine.say(rule)
-    print(rule)
-    engine.runAndWait()
+    def get_random_rules(self, filename, count=9):
+        rules = self.read_rules(filename)
+        return sample(rules, min(len(rules), count))
 
-# Main function
-def main():
-    random_penalties, random_advantages = get_random_rules()
+    def announce_rule(self, rule):
+        print(rule)
+        self.engine.say(rule)
+        self.engine.runAndWait()
 
-    while True:
-        dice_roll = input("Enter your d20 roll: ")
+    def validate_dice_roll(self, roll):
+        return roll.isdigit() and 1 <= int(roll) <= 20
 
-        # Validate input
-        if not dice_roll.isdigit() or not 1 <= int(dice_roll) <= 20:
-            print("Error: Please enter a valid integer between 1 and 20.")
-            continue
+    def main(self):
+        random_penalties = self.get_random_rules(self.PENALTIES_FILE)
+        random_advantages = self.get_random_rules(self.ADVANTAGES_FILE)
 
-        time.sleep(1)  # Adding a 1-second delay
+        while True:
+            dice_roll = input("Enter your d20 roll: ")
 
-        dice_roll = int(dice_roll)
+            if not self.validate_dice_roll(dice_roll):
+                print("Error: Please enter a valid integer between 1 and 20.")
+                continue
 
-        # Handle the case when the dice roll is 19
-        if dice_roll == 19:
-            announce_rule("Roll again for forfeit.")
-            continue
+            time.sleep(1)  # Adding a 1-second delay
+            dice_roll = int(dice_roll)
 
-        # Apply rules based on dice roll
-        if dice_roll == 1:
-            announce_rule(YOU_SD_PENALTY)
-        elif dice_roll == 20:
-            announce_rule(YOU_PICK_DICE_PENALTY)
-        elif dice_roll % 2 == 0:
-            announce_rule(random_penalties[dice_roll // 2 - 1])
-        else:
-            announce_rule(random_advantages[dice_roll // 2])
+            if dice_roll == 19:
+                self.announce_rule("Roll again for forfeit.")
+                continue
 
-        print("\n")  # Adding a line break for neatness
+            if dice_roll == 1:
+                self.announce_rule(self.YOU_SD_PENALTY)
+            elif dice_roll == 20:
+                self.announce_rule(self.YOU_PICK_DICE_PENALTY)
+            elif dice_roll % 2 == 0:
+                self.announce_rule(random_penalties[dice_roll // 2 - 1])
+            else:
+                self.announce_rule(random_advantages[dice_roll // 2])
+
+            print("\n")  # Adding a line break for neatness
 
 if __name__ == "__main__":
-    main()
+    GameRules().main()
