@@ -1,10 +1,11 @@
 import pyttsx3
 import re
 import openai
+import tkinter as tk
 
 # Constants
 MODEL_NAME = "gpt-3.5-turbo"
-API_KEY = "     "  # ENTER API KEY HERE
+API_KEY = ""  # ENTER API KEY HERE
 VOICE_MAPPING = {
     "Zira": 0,
     "Hazel": 1
@@ -17,21 +18,33 @@ openai.api_key = API_KEY
 # Set up pyttsx3 engine and configure it only once
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
-voice_ids = {voice.name: voice.id for voice in voices}
+
+# Initialize the subtitle window
+root = tk.Tk()
+root.attributes('-transparentcolor', 'black')
+root.overrideredirect(True)
+root.lift()
+root.wm_attributes("-topmost", True)
+root.wm_attributes("-disabled", True)
+subtitle_width = 800
+label = tk.Label(root, text='', font=('Helvetica', 30), fg='white', bg='black', wraplength=subtitle_width, justify='center')
+label.pack()
 
 def main():
-    try:
-        print_intro()
-        episode_number = 1
+    print_intro()
+    init_subtitle_window()  # Initialize the subtitle window
+    episode_number = 1
 
+    try:
         while True:
             handle_episode(episode_number)
             episode_number += 1
-
     except KeyboardInterrupt:
         print("Program terminated by the user.")
     except Exception as e:
         print(f"An error occurred: {e}")
+    finally:
+        root.destroy()  # Ensure the Tkinter window is closed when the program ends
 
 def print_intro():
     intro = (
@@ -66,18 +79,35 @@ def speak_dialogue(dialogue):
         if line:
             speaker, line_dialogue = line.split(': ', 1)
             set_voice(speaker)
-            print(f"\n{speaker}: {line_dialogue}")
+            update_subtitle(f"{speaker}: {line_dialogue}")
             engine.say(line_dialogue)
             engine.runAndWait()
+    update_subtitle("")  # Clear the subtitle after speaking
 
 def set_voice(speaker):
     voice_index = VOICE_MAPPING.get(speaker)
     if voice_index is not None:
         engine.setProperty('voice', voices[voice_index].id)
 
-
 def remove_stage_directions(text):
     return RE_STAGE_DIRECTIONS.sub('', text)
 
+def init_subtitle_window():
+    global root, label
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    label.update_idletasks()
+    window_width = subtitle_width
+    window_height = label.winfo_reqheight()
+    x_coordinate = (screen_width // 2) - (window_width // 2)
+    y_coordinate = screen_height - window_height - 75  # Adjust the vertical position of the subtitle
+    root.geometry(f"+{x_coordinate}+{y_coordinate}")
+
+def update_subtitle(text):
+    label.config(text=text)
+    root.update_idletasks()
+    root.update()
+
 if __name__ == "__main__":
     main()
+    root.mainloop()  # Start the Tkinter event loop

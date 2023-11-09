@@ -1,287 +1,146 @@
-money = float(input("How much money do you have? "))
-money = round(money,2)
-print ("\n     Welcome to PyMarket!")      
-def moneyFormat(money):
-    pounds = round(money)
-    if len(str(round(money,2))) == 3 or len(str(money - pounds)) == 3:
-        string = str(money) + "0"
-    else:
-        string = str(money)
-    return string
-            
-items = []
-produce = ["Apple","Pear","Orange"]
-dairy = ["Milk","Cheese","Butter","Ice cream"]
-protein = ["Steak","Pork","Egg","Lamb","Ham","Sausage","Beef","Chicken","Turkey","Fish"]
-grain = ["Sugar","Flour","Salt","Rice","Beans"]
-other = ["Water"]
-ingredients = []
-recipes = []
-while 1 > 0:
-    print("\n1) Enter Market\n2) Make Recipes\n3) Sell Recipes\n")
-    option = int(input("Enter option number: "))
-    aisle = ""
-    if option == 1:
-        while 1 > 0:
-            print ("\nAisles:\n\n1) Produce\n2) Dairy Products\n3) Protein\n4) Grain\n5) Other\n\n6) Leave\n")
-            aisle = int(input("Enter aisle: "))
-            if aisle == "":
-                aisle = 6
-                
-            if aisle == 1:
-                product = produce
-                price = 0.25
-            elif aisle == 2:
-                product = dairy
-                price = 1.5
-            elif aisle == 3:
-                product = protein
-                price = 2
-            elif aisle == 4:
-                product = grain
-                price = 1.25
-            elif aisle == 5:
-                product = other
-                price = 1
-            elif aisle >= 6:
-                break
-            while 1 > 0:
-                print()
-                for i in range(len(product)):
-                    print(str(i+1) + ". " + product[i])
-                print("\n" + str(len(product) + 1) + ". Leave Aisle")
+class Market:
+    def __init__(self):
+        self.money = round(float(input("How much money do you have? £")), 2)
+        self.item_quantities = {}
+        self.recipes = []
+        self.aisles = {
+            "Produce": {"products": ["Apple", "Pear", "Orange"], "price": 0.25},
+            "Dairy": {"products": ["Milk", "Cheese", "Butter", "Ice cream"], "price": 1.5},
+            "Protein": {"products": ["Steak", "Pork", "Egg", "Lamb", "Ham", "Sausage", "Beef", "Chicken", "Turkey", "Fish"], "price": 2},
+            "Grain": {"products": ["Sugar", "Flour", "Salt", "Rice", "Beans"], "price": 1.25},
+            "Other": {"products": ["Water"], "price": 1}
+        }
+        self.recipe_prices = {
+            "Cake": 15,
+            "Chicken and Rice": 6.5,
+            "Apple Crumble": 4,
+            "Pear Crumble": 4,
+            "Fruit Salad": 3
+        }
+        self.recipe_ingredients = {
+            "Cake": {"Butter": 2, "Egg": 3, "Sugar": 1, "Salt": 1},
+            "Chicken and Rice": {"Chicken": 2, "Rice": 3, "Salt": 1},
+            "Apple Crumble": {"Flour": 1, "Salt": 1, "Butter": 1, "Water": 1, "Apple": 3},
+            "Pear Crumble": {"Flour": 1, "Salt": 1, "Butter": 1, "Water": 1, "Pear": 3},
+            "Fruit Salad": {"Apple": 4, "Pear": 4, "Orange": 4}
+        }
 
-                item = int(input("Enter item number: "))
-                if item == len(product) + 1:
-                    break
-                quantity = int(input("Enter quantity: "))
-                if quantity == "":
-                    quantity = 1
-                cost = price * quantity
+    def update_money(self, amount):
+        self.money = round(self.money + amount, 2)
 
-
-                if money >= cost:
-                    for i in range(quantity):
-                        money -= price
-                        items.append(product[item - 1])
-                    print("\nBought",quantity,product[item -1].lower() , "for £" + moneyFormat(cost))
-                else:
-                    print ("Not enough money!\n")
-                print("Money: £" + moneyFormat(money))
-    elif option == 2:
-        for i in range(len(items)):
-            print("Item",str(i+1) + ":", items[i])
-        print("\nOption" , str(len(items) + 1) + ": Leave\n")
-        option = int(input("Enter option number: "))
-        while 1 > 0:
-            if (option >= len(items) + 1):
+    def main_menu(self):
+        while True:
+            print("\nMain Menu:")
+            print("1) Enter Market")
+            print("2) Make Recipes")
+            print("3) Sell Recipes")
+            print("4) Exit Program")
+            choice = input("Choose an option: ")
+            if choice == '1':
+                self.enter_market()
+            elif choice == '2':
+                self.make_recipes()
+            elif choice == '3':
+                self.sell_recipes()
+            elif choice == '4':
+                print(f"Exiting the program. You have £{self.money:.2f} left.")
                 break
             else:
-                ingredients.append(items[option-1])
-                items.remove(items[option-1])
-            for i in range(len(items)):
-                print("Item",str(i+1) + ":", items[i])
-            print("\nOption" , str(len(items) + 1) + ": Make\n")
-            option = int(input("Enter option number: "))
-            
-        print ("With these ingredients:\n")
-        for i in range(len(ingredients)):
-            print(ingredients[i])
-        print("\nYou can make:")
-        while 1 > 0:
-            cake = False
-            chickenAndRice = False
-            appleCrumble = False
-            pearCrumble = False
-            fruitSalad = False
-                
-            apple = 0
-            beans = 0
-            beef = 0
-            butter = 0
-            cheese = 0
-            chicken = 0
-            egg = 0
-            fish = 0
-            flour = 0
-            ham = 0
-            iceCream = 0
-            lamb = 0
-            milk = 0
-            orange = 0
-            pear = 0
-            pork = 0
-            rice = 0
-            salt = 0
-            sausage = 0
-            steak = 0
-            sugar = 0
-            turkey = 0
-            water = 0
-            for i in range(len(ingredients)):
-                if ingredients[i] == "Apple":
-                    apple += 1                
-                if ingredients[i] == "Beans":
-                    beans += 1
-                elif ingredients[i] == "Beef":
-                    beef += 1
-                elif ingredients[i] == "Butter":
-                    butter += 1
-                elif ingredients[i] == "Cheese":
-                    cheese += 1
-                elif ingredients[i] == "Chicken":
-                    chicken += 1
-                elif ingredients[i] == "Egg":
-                    egg += 1
-                elif ingredients[i] == "Fish":
-                    fish += 1
-                elif ingredients[i] == "Flour":
-                    flour += 1
-                elif ingredients[i] == "Ham":
-                    ham += 1
-                elif ingredients[i] == "Ice cream":
-                    iceCream += 1
-                elif ingredients[i] == "Lamb":
-                    lamb += 1
-                elif ingredients[i] == "Milk":
-                    milk += 1
-                elif ingredients[i] == "Orange":
-                    orange += 1
-                elif ingredients[i] == "Pear":
-                    pear += 1
-                elif ingredients[i] == "Pork":
-                    pork += 1
-                elif ingredients[i] == "Rice":
-                    rice += 1
-                elif ingredients[i] == "Salt":
-                    salt += 1
-                elif ingredients[i] == "Sausage":
-                    sausage += 1
-                elif ingredients[i] == "Steak":
-                    steak += 1
-                elif ingredients[i] == "Sugar":
-                    sugar += 1
-                elif ingredients[i] == "Turkey":
-                    turkey += 1
-                elif ingredients[i] == "Water":
-                    water += 1
-                
-            if butter >= 2 and egg >= 3 and sugar >= 1 and salt >= 1:
-                cake = True
-                
-            elif chicken >= 2 and rice >= 3 and salt >= 1:
-                chickenAndRice = True
+                print("Invalid choice. Please enter a number from 1 to 4.")
 
-            elif flour >= 1 and salt >= 1 and butter >= 1 and water >= 1 and apple >= 3:
-                appleCrumble = True
+    def enter_market(self):
+        print("\nWelcome to PyMarket!")
+        while True:
+            print("\nAisles:\n")
+            for i, aisle_name in enumerate(self.aisles, 1):
+                print(f"{i}) {aisle_name}")
+            print("\n6) Return to Main Menu\n")
 
-            elif flour >= 1 and salt >= 1 and butter >= 1 and water >= 1 and pear >= 3:
-                pearCrumble = True
-            elif apple >= 4 and pear >= 4 and orange >= 4:
-                fruitSalad = True
+            try:
+                aisle_choice = int(input("Enter aisle: "))
+                if aisle_choice == 6:
+                    break
+                selected_aisle = list(self.aisles.values())[aisle_choice - 1]
+                self.shop_in_aisle(selected_aisle)
+            except (ValueError, IndexError):
+                print("Invalid choice. Please enter a number from the list.")
 
-            break
-        if cake == True:
-            while butter >= 2 and egg >= 3 and sugar >= 1 and salt >= 1:
-                recipes.append("Cake")
-                butter -= 2
-                egg -= 3
-                sugar -= 1
-                salt -= 1
-        elif chickenAndRice == True:
-            while chicken >= 2 and rice >= 3 and salt >= 1:
-                recipes.append("Chicken and Rice")
-                chicken -= 2
-                rice -= 3
-                salt -= 1
-        elif appleCrumble == True:
-            while flour >= 1 and salt >= 1 and butter >= 1 and water >= 1 and apple >= 3:
-                recipes.append("Apple Crumble")
-                flour -= 1
-                salt -= 1
-                butter -= 1
-                water -= 1
-                apple -= 3
-        elif pearCrumble == True:
-            while flour >= 1 and salt >= 1 and butter >= 1 and water >= 1 and pear >= 3:
-                recipes.append("Pear Crumble")
-                flour -= 1
-                salt -= 1
-                butter -= 1
-                water -= 1
-                pear -= 3
-        elif fruitSalad == True:
-            while apple >= 4 and pear >= 4 and orange >= 4:
-                recipes.append("Fruit Salad")
-                apple -= 1
-                pear -= 1
-                orange -= 1
-                
-        else:
-            print("Nothing")
-        for i in range(len(recipes)):
-            print(recipes[i])
-    elif option == 3:
-        apple = 0
-        beans = 0
-        beef = 0
-        butter = 0
-        cheese = 0
-        chicken = 0
-        egg = 0
-        fish = 0
-        flour = 0
-        ham = 0
-        iceCream = 0
-        lamb = 0
-        milk = 0
-        orange = 0
-        pear = 0
-        pork = 0
-        rice = 0
-        salt = 0
-        sausage = 0
-        steak = 0
-        sugar = 0
-        turkey = 0
-        water = 0
-        while 1 > 0:
-            price = 0
-            print("Sell:\n")
-            for i in range(len(recipes)):
-                print(str(i+1) + ")",recipes[i])
-            print("\nOption",str(len(recipes) + 1) + ": Keep Recipes")
-            
-            sell = int(input("Enter option number: "))
+    def shop_in_aisle(self, aisle):
+        while True:
+            print()
+            for i, product in enumerate(aisle['products'], 1):
+                print(f"{i}. {product}")
+            print(f"\n{len(aisle['products']) + 1}. Leave Aisle")
 
-            if sell >= len(recipes) + 1:
+            try:
+                item_choice = int(input("Enter item number: "))
+                if item_choice == len(aisle['products']) + 1:
+                    break
+                product_name = aisle['products'][item_choice - 1]
+                quantity = int(input("Enter quantity: "))
+                cost = aisle['price'] * quantity
+
+                if self.money >= cost:
+                    self.update_money(-cost)
+                    self.item_quantities[product_name] = self.item_quantities.get(product_name, 0) + quantity
+                    print(f"\nBought {quantity} {product_name.lower()} for £{cost:.2f}")
+                else:
+                    print("Not enough money!")
+                print(f"Money left: £{self.money:.2f}")
+            except (ValueError, IndexError):
+                print("Invalid choice or quantity. Please enter a valid number.")
+
+    def make_recipes(self):
+        while True:
+            print("\nItems available to make recipes:")
+            for item, quantity in self.item_quantities.items():
+                print(f"{item}: {quantity}")
+            print("\nEnter the item names to combine into a recipe (comma-separated), or 'done' to finish:")
+
+            selected_items_input = input()
+            if selected_items_input.lower() == 'done':
                 break
-            
-            elif recipes[sell - 1] == "Cake":
-                money += 15
-            elif recipes[sell - 1] == "Chicken and Rice":
-                money += 6.5
-            recipes.remove(recipes[sell - 1])
-                
 
+            selected_items = selected_items_input.split(',')
+            recipe_name = self.combine_items_into_recipe(selected_items)
+            if recipe_name:
+                self.recipes.append(recipe_name)
+                print(f"Created {recipe_name}!")
+            else:
+                print("Those items don't make a recipe.")
 
+    def combine_items_into_recipe(self, selected_items):
+        # Convert the list of selected items to a dictionary with item counts
+        selected_items_counts = {item.strip(): selected_items.count(item.strip()) for item in selected_items}
         
-                
-            
-                    
-                
-                
+        # Try to find a recipe that can be made with the selected items
+        for recipe_name, required_ingredients in self.recipe_ingredients.items():
+            if all(self.item_quantities.get(item, 0) >= quantity for item, quantity in required_ingredients.items()):
+                # If all required ingredients are available, reduce their quantities and return the recipe name
+                for item, quantity in required_ingredients.items():
+                    self.item_quantities[item] -= quantity
+                return recipe_name
+        return None
 
-        
+    def sell_recipes(self):
+        while True:
+            print("\nRecipes ready to sell:")
+            for i, recipe in enumerate(self.recipes, 1):
+                print(f"{i}. {recipe}")
+            print("\nEnter the number of the recipe to sell, or 'done' to finish:")
 
-        
+            recipe_input = input()
+            if recipe_input.lower() == 'done':
+                break
 
-        
+            try:
+                recipe_index = int(recipe_input) - 1
+                recipe_name = self.recipes.pop(recipe_index)
+                self.update_money(self.recipe_prices[recipe_name])
+                print(f"Sold {recipe_name} for £{self.recipe_prices[recipe_name]}!")
+            except (ValueError, IndexError):
+                print("Invalid selection. Please enter a recipe number.")
 
-            
-
-
-    
-        
-
-        
+# Main Program
+market = Market()
+market.main_menu()
