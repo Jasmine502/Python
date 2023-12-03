@@ -5,7 +5,7 @@ import tkinter as tk
 
 # Constants
 MODEL_NAME = "gpt-3.5-turbo"
-API_KEY = ""  # ENTER API KEY HERE
+API_KEY = "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"  # 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
 VOICE_MAPPING = {
     "Zira": 0,
     "Hazel": 1
@@ -26,12 +26,20 @@ root.overrideredirect(True)
 root.lift()
 root.wm_attributes("-topmost", True)
 root.wm_attributes("-disabled", True)
-subtitle_width = 800
+subtitle_width = 1100
 label = tk.Label(root, text='', font=('Helvetica', 30), fg='white', bg='black', wraplength=subtitle_width, justify='center')
 label.pack()
 
 def main():
+    global MODEL_NAME
     print_intro()
+    # Let the user choose the model
+    model_choice = input("Choose the AI model (1 for GPT-3.5-turbo, 2 for GPT-4): ").strip()
+    if model_choice == "2":
+        MODEL_NAME = "gpt-4"
+    else:
+        MODEL_NAME = "gpt-3.5-turbo"
+
     init_subtitle_window()  # Initialize the subtitle window
     episode_number = 1
 
@@ -45,6 +53,7 @@ def main():
         print(f"An error occurred: {e}")
     finally:
         root.destroy()  # Ensure the Tkinter window is closed when the program ends
+
 
 def print_intro():
     intro = (
@@ -100,7 +109,7 @@ def init_subtitle_window():
     window_width = subtitle_width
     window_height = label.winfo_reqheight()
     x_coordinate = (screen_width // 2) - (window_width // 2)
-    y_coordinate = screen_height - window_height - 75  # Adjust the vertical position of the subtitle
+    y_coordinate = screen_height - window_height - 125 # Adjust the vertical position of the subtitle
     root.geometry(f"+{x_coordinate}+{y_coordinate}")
 
 def update_subtitle(text):

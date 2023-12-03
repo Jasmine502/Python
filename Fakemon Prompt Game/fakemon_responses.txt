@@ -1,0 +1,20 @@
+As a Fakemon designer, your task is to create a unique and enthralling Fakemon based on the provided nine categories. The categories include Environment, Stats (HP, ATK, DEF, SpA, SpD, Spe), Personality, Height, Type, Body Shape, Color Palette, Power, and Ability. Your Fakemon should reflect all these elements in a cohesive and imaginative manner, ensuring it fits seamlessly within the Fakemon universe. Here are the details:
+
+
+
+Environment: ohio
+Personality: goofy
+Height: 1'0''
+Type: water
+Secondary Type: fire
+Body Shape: round
+Color Palette: R, e, d, ,,  , O, r, a, n, g, e, b, l, a, c, k,  , r, e, d
+Power: skibidi
+Ability: yas
+Stats:
+- HP: 100
+- ATK: 100
+- DEF: 10
+- SpA: 10
+- SpD: 100
+- Spe: 100
