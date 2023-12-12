@@ -142,5 +142,4 @@ async def on_command_error(ctx, error):
     else:
         raise error
 
-bot.run('BOT-TOKEN')
-# MTE4Mjk5NjE5MDIyMTA2MjE4NQ.Grpjji.uNuGjWesfwc8shjxhnqKR6SjEWiCT54mj8HF-0
+bot.run('BOT-TOKEN FIND IN API KEYS')
