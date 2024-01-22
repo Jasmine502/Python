@@ -8,6 +8,26 @@
                 "ability1": "Crash",
                 "ability2": "Trans",
                 "artwork": "https://static.wikia.nocookie.net/welcometouna/images/7/76/RISE_OF_KOL.png/revision/latest?cb=20221108201251"
+            },
+            {
+                "name": "Dustin",
+                "type": "character",
+                "rarity": "rare",
+                "ability1": "Diamonds!",
+                "ability2": "Overdose",
+                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/d/d5/Dustin.png/revision/latest/scale-to-width-down/1000?cb=20221109182522"
+            }
+        ]
+    },
+    "386145081092079623": {
+        "inventory": [
+            {
+                "name": "Dustin",
+                "type": "character",
+                "rarity": "rare",
+                "ability1": "Diamonds!",
+                "ability2": "Overdose",
+                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/d/d5/Dustin.png/revision/latest/scale-to-width-down/1000?cb=20221109182522"
             }
         ]
     }

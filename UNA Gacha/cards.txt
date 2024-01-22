@@ -1,4 +1,0 @@
-Ghost,character,rare,Invisibility,https://static.wikia.nocookie.net/welcometouna/images/7/77/Little_ghost_FNF.png/revision/latest?cb=20221109184821
-Kol,character,uncommon,Crash,https://static.wikia.nocookie.net/welcometouna/images/7/76/RISE_OF_KOL.png/revision/latest?cb=20221108201251
-Vaporia,world,epic,Vape,https://static.wikia.nocookie.net/welcometouna/images/f/f7/Vaporia_Pixel.png/revision/latest?cb=20221109113127
-UNA,entity,legendary,UNA,https://static.wikia.nocookie.net/welcometouna/images/9/9c/UNA.png/revision/latest?cb=20221108202539&format=original
