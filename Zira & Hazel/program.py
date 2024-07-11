@@ -1,11 +1,11 @@
 import pyttsx3
 import re
-import openai
+from openai import OpenAI
 import tkinter as tk
 
 # Constants
 MODEL_NAME = "gpt-3.5-turbo"
-API_KEY = "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"  # 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
+API_KEY = ""  # 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
 VOICE_MAPPING = {
     "Zira": 0,
     "Hazel": 1
@@ -13,7 +13,7 @@ VOICE_MAPPING = {
 RE_STAGE_DIRECTIONS = re.compile(r'\([^)]*\)|\[.*?\]|\*.*?\*')
 
 # Initialize OpenAI API key
-openai.api_key = API_KEY
+openai.api_key = OpenAI(API_KEY)
 
 # Set up pyttsx3 engine and configure it only once
 engine = pyttsx3.init()

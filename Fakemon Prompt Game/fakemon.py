@@ -8,11 +8,14 @@ def clear_screen():
 
 def get_input_for_category(category, description):
     print(f"Choose a value for {category}. {description}")
-    return input("Enter your value: ")
+    return input("Enter your value: ").strip()
 
 def get_participant_names():
     participants = []
-    while (name := input("Enter participant name (or press Enter to finish): ").strip()):
+    while True:
+        name = input("Enter participant name (or press Enter to finish): ").strip()
+        if not name:
+            break
         participants.append(name)
     return participants
 
@@ -44,6 +47,8 @@ def main():
 
         primary_categories = ["Environment", "Personality", "Height", "Power", "Ability", "Body Shape"]
         stat_categories = ["HP", "ATK", "DEF", "SpA", "SpD", "Spe"]
+
+        # Shuffle primary and stat categories separately
         random.shuffle(primary_categories)
         random.shuffle(stat_categories)
 
@@ -61,9 +66,7 @@ def main():
             time.sleep(1.5)
             clear_screen()
 
-
         final_text = "As a Fakemon designer, your task is to create a unique and enthralling Fakemon based on the provided categories.\n\n"
-
         for category in category_list:
             final_text += f"{category}: {responses.get(category, 'N/A')}\n"
 
