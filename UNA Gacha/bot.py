@@ -1,11 +1,11 @@
 import discord
 import random
 import json
-from discord.ext import commands, menus
-import asyncio
 import os
 import csv
 import datetime
+import asyncio
+from discord.ext import commands, menus
 
 # Set up intents
 intents = discord.Intents.default()
@@ -27,11 +27,9 @@ def read_cards():
 def load_user_data():
     try:
         with open('user_data.json', 'r') as file:
-            file_contents = file.read()
-            return json.loads(file_contents) if file_contents else {}
+            return json.load(file)
     except FileNotFoundError:
         return {}
-
 
 def save_user_data(data):
     with open('user_data.json', 'w') as file:
@@ -43,12 +41,14 @@ user_data = load_user_data()
 # Gacha command
 @bot.command()
 async def gacha(ctx):
-    weights = [rarity_weights[card['rarity'].lower()] for card in cards]
+    weights = [rarity_weights.get(card['rarity'].lower(), 0) for card in cards]
     card = random.choices(cards, weights=weights, k=1)[0]
+    
+    # Ensure card attributes exist
     embed = discord.Embed(
         title=card['name'],
-        description=f"*{card['type']}*\n{rarity_emojis[card['rarity'].lower()]}\n1. {card['ability1']}\n2. {card['ability2']}",
-        color=rarity_colors[card['rarity'].lower()]
+        description=f"*{card['type']}*\n{rarity_emojis.get(card['rarity'].lower(), '')}\n1. {card.get('ability1', 'N/A')}\n2. {card.get('ability2', 'N/A')}",
+        color=rarity_colors.get(card['rarity'].lower(), 0xCCCCCC)
     )
     embed.set_image(url=card['artwork'])
     embed.set_footer(text=f"Pulled on {datetime.datetime.utcnow().strftime('%d/%m/%Y')}")
@@ -64,9 +64,7 @@ async def gacha(ctx):
         await ctx.send('Time out. Try again.')
     else:
         user_id = str(ctx.author.id)
-        if user_id not in user_data:
-            user_data[user_id] = {'inventory': []}
-        user_data[user_id]['inventory'].append(card)
+        user_data.setdefault(user_id, {'inventory': []})['inventory'].append(card)
         save_user_data(user_data)
         await ctx.send(f'Card added to your inventory: {card["name"]}')
 
@@ -80,17 +78,16 @@ class CardMenu(menus.Menu):
         return await ctx.send(embed=self.create_card_embed(self.cards[self.current_page]))
 
     def create_card_embed(self, card):
-        # Handling missing ability keys
         ability1 = card.get('ability1', 'N/A')
         ability2 = card.get('ability2', 'N/A')
-
         color = rarity_colors.get(card['rarity'].lower(), 0xCCCCCC)
         embed = discord.Embed(
             title=card['name'],
-            description=f"*{card['type']}*\n{rarity_emojis[card['rarity'].lower()]}\n1. {ability1}\n2. {ability2}",
+            description=f"*{card['type']}*\n{rarity_emojis.get(card['rarity'].lower(), '')}\n1. {ability1}\n2. {ability2}",
             color=color
         )
         embed.set_image(url=card['artwork'])
+        embed.set_footer(text=f"Page {self.current_page + 1} of {len(self.cards)}")  # {{ edit_1 }}
         return embed
 
     @menus.button('⬅️')
@@ -109,7 +106,6 @@ class CardMenu(menus.Menu):
 
     @menus.button('🔢')
     async def on_number_button(self, payload):
-        # Sort by name, you can implement sorting by type or abilities as needed
         self.cards.sort(key=lambda card: card['rarity'])
         self.current_page = 0
         embed = self.create_card_embed(self.cards[self.current_page])
@@ -118,15 +114,12 @@ class CardMenu(menus.Menu):
 @bot.command()
 async def inventory(ctx):
     user_id = str(ctx.author.id)
-    if user_id in user_data:
-        user_inventory = user_data[user_id].get('inventory', [])
-        if user_inventory:
-            menu = CardMenu(user_inventory)
-            await menu.start(ctx)
-        else:
-            await ctx.send("You don't have any cards in your inventory.")
+    user_inventory = user_data.get(user_id, {}).get('inventory', [])
+    if user_inventory:
+        menu = CardMenu(user_inventory)
+        await menu.start(ctx)
     else:
-        await ctx.send("You don't have an inventory yet. Use the gacha command to get cards!")
+        await ctx.send("You don't have any cards in your inventory. Use the gacha command to get cards!")
 
 # Bot ready event
 @bot.event
@@ -142,4 +135,5 @@ async def on_command_error(ctx, error):
     else:
         raise error
 
-bot.run('MTE4Mjk5NjE5MDIyMTA2MjE4NQ.G4vqD3.HLrYlvoQna9i_3Zfw0gYdGOatJkEKpXhnYCbxI')
+# MTE4Mjk5NjE5MDIyMTA2MjE4NQ.GYNBFs.UbPEh3zECZ1RK7EXSdm2FMAi_Ee-dm3PrxPvWg
+bot.run('MTE4Mjk5NjE5MDIyMTA2MjE4NQ.GYNBFs.UbPEh3zECZ1RK7EXSdm2FMAi_Ee-dm3PrxPvWg')

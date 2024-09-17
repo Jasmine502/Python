@@ -29,6 +29,12 @@ class Market:
         self.money = round(self.money + amount, 2)
 
     def main_menu(self):
+        menu_options = {
+            '1': self.enter_market,
+            '2': self.make_recipes,
+            '3': self.sell_recipes,
+            '4': self.exit_program
+        }
         while True:
             print("\nMain Menu:")
             print("1) Enter Market")
@@ -36,17 +42,15 @@ class Market:
             print("3) Sell Recipes")
             print("4) Exit Program")
             choice = input("Choose an option: ")
-            if choice == '1':
-                self.enter_market()
-            elif choice == '2':
-                self.make_recipes()
-            elif choice == '3':
-                self.sell_recipes()
-            elif choice == '4':
-                print(f"Exiting the program. You have £{self.money:.2f} left.")
-                break
+            action = menu_options.get(choice)
+            if action:
+                action()
             else:
                 print("Invalid choice. Please enter a number from 1 to 4.")
+
+    def exit_program(self):
+        print(f"Exiting the program. You have £{self.money:.2f} left.")
+        exit()
 
     def enter_market(self):
         print("\nWelcome to PyMarket!")
@@ -110,13 +114,10 @@ class Market:
                 print("Those items don't make a recipe.")
 
     def combine_items_into_recipe(self, selected_items):
-        # Convert the list of selected items to a dictionary with item counts
         selected_items_counts = {item.strip(): selected_items.count(item.strip()) for item in selected_items}
         
-        # Try to find a recipe that can be made with the selected items
         for recipe_name, required_ingredients in self.recipe_ingredients.items():
             if all(self.item_quantities.get(item, 0) >= quantity for item, quantity in required_ingredients.items()):
-                # If all required ingredients are available, reduce their quantities and return the recipe name
                 for item, quantity in required_ingredients.items():
                     self.item_quantities[item] -= quantity
                 return recipe_name

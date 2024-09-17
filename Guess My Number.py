@@ -27,10 +27,8 @@ def get_user_guess():
 def play_game():
     number = random.randint(1, 10)
     print("I've got a number between 1 and 10 in mind.\nYou've got three shots to guess it.")
-    count = 0
-    while count < 3:
+    for count in range(1, 4):
         guess = get_user_guess()
-        count += 1
         if guess == number:
             print("Impressive... You've got it!")
             return True
@@ -44,11 +42,9 @@ def play_game():
 
 def main():
     print("Hey there, ready to play a guessing game?")
-    while True:
+    while input("Feeling lucky? Want to go again? (y/n) ").lower() == 'y':
         play_game()
-        again = input("Feeling lucky? Want to go again? (y/n) ").lower()
-        if again != 'y':
-            break
     print("Thanks for playing with me. Ta-ta!")
 
-main()
+if __name__ == "__main__":
+    main()

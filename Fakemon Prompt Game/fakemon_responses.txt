@@ -1,18 +1,18 @@
 As a Fakemon designer, your task is to create a unique and enthralling Fakemon based on the provided categories.
 
-ATK: 69
-Personality: Depressed
-Type: Grass
-Ability: Mow
-Height: 2 ft
-Environment: Front lawns
-Power: re-growing
-Color Palette 1: green
-SpD: 100
-Spe: 60
-Body Shape: sharp
-Secondary Type: ghost
-Color Palette 2: cerulean
+Body Shape: Rotund
+Secondary Type: Fire
+Ability: Cut
+Personality: Bossy
+Color Palette 1: Red, Blue
 SpA: 70
-DEF: 150
-HP: 200
+HP: 50
+Spe: 60
+Environment: Rocky areas
+Height: 1 ft
+Type: Grass
+SpD: 7-
+ATK: 100
+Color Palette 2: Yellow, Black
+Power: Screech
+DEF: 5

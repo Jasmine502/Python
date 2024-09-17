@@ -1,19 +1,44 @@
-import openai, re
+import os
+import re
+from groq import Groq
 
-# Initialize OpenAI GPT-3.5-turbo
-openai.api_key = ''  # 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
+# Fetch API key from environment variables
+API_KEY = os.getenv("GROQ_API_KEY")
+if not API_KEY:
+    raise ValueError("API key for Groq is not set in environment variables.")
+client = Groq(api_key=API_KEY)
 
 def generate_auction_item_and_bid():
-    prompt = "You are an auctioneer. Provide the name of a unique auction item (ranging from extremely commonplace to incredibly absurd), followed by a colon and its reasonable starting bid in numeric form. Format: [ITEM NAME]: [STARTING_BID]. Example: Signed Beatles Album: 10000"
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        max_tokens=30
+    prompt = (
+        "You are an auctioneer. Provide the name of a unique auction item from pop culture (ranging from extremely commonplace to incredibly absurd), "
+        "followed by a colon and its reasonable starting bid in numeric form. "
+        "Respond ONLY with the item and starting bid in the format: [ITEM NAME]: [STARTING_BID]. "
+        "Do NOT include any introductions, explanations, or additional text. "
+        "Example: Signed Beatles Album: 10000"
     )
-    text = response.choices[0].text.strip()
-    item, starting_bid = text.split(':')
-    formatted_bid = "{:,.2f}".format(float(starting_bid.strip()))
-    return item.strip(), formatted_bid
+    conversation = [
+        {"role": "system", "content": "You are an assistant that generates unique auction items with reasonable starting bids. You must follow the user's instructions precisely."},
+        {"role": "user", "content": prompt}
+    ]
+
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=conversation,
+        temperature=1,
+        max_tokens=30,
+        top_p=1,
+        stream=False  # Set to False to get the entire response at once
+    )
+
+    text = response.choices[0].message.content.strip()
+    try:
+        item, starting_bid = text.split(':')
+        formatted_bid = "{:,.2f}".format(float(starting_bid.strip()))
+        return item.strip(), formatted_bid
+    except ValueError:
+        # In case the response format is incorrect, try again
+        print(f"\nFinding new item....")
+        return generate_auction_item_and_bid()
 
 class Player:
     def __init__(self, name):
@@ -37,8 +62,6 @@ def main():
 
     player1 = Player(player1_name)
     player2 = Player(player2_name)
-    current_player = player1
-    other_player = player2
 
     while player1.budget > 0 and player2.budget > 0:
         item, starting_bid = generate_auction_item_and_bid()
@@ -46,40 +69,43 @@ def main():
         print(f"Starting bid: ${starting_bid}")
 
         bid = float(starting_bid.replace(',', ''))
-        player1_bid = player2_bid = 0.0
-        no_bids = True
+        current_bid = bid
+        highest_bidder = None
+        pass_count = 0  # Track the number of consecutive passes
+        current_player = player1
+        other_player = player2
 
         while True:
             print(f"{current_player.name}'s turn. Budget: ${current_player.formatted_budget()}")
             player_bid = input(f"Enter your bid (or 'pass' to forfeit): ").strip().lower()
 
             if player_bid == 'pass':
-                if no_bids:
-                    print(f"Both players passed. The item '{item}' will not be sold.")
-                    break
-                else:
-                    winner = other_player
-                    winner.collection.append(item)
-                    print(f"Congratulations {winner.name}, you won the bid for {item}!")
-                    break
-
-            try:
-                player_bid = float(player_bid)
-                if player_bid > bid and current_player.bid(player_bid):
-                    bid = player_bid
-                    no_bids = False
-                    if current_player == player1:
-                        player1_bid = player_bid
-                        current_player = player2
-                        other_player = player1
+                pass_count += 1
+                if pass_count == 2:
+                    if highest_bidder is None:
+                        print(f"Both players passed. The item '{item}' will not be sold.")
                     else:
-                        player2_bid = player_bid
-                        current_player = player1
-                        other_player = player2
+                        highest_bidder.collection.append(item)
+                        print(f"Congratulations {highest_bidder.name}, you won the bid for {item}!")
+                    break  # Exit the inner loop after two consecutive passes
                 else:
-                    print("Invalid bid. Try again.")
-            except ValueError:
-                print("Please enter a valid number or 'pass'.")
+                    current_player, other_player = other_player, current_player
+            else:
+                try:
+                    player_bid = float(player_bid)
+                    if player_bid > current_bid and current_player.bid(player_bid):
+                        current_bid = player_bid
+                        highest_bidder = current_player
+                        pass_count = 0  # Reset pass count when a valid bid is made
+                        current_player, other_player = other_player, current_player
+                    else:
+                        print("Invalid bid. Try again.")
+                except ValueError:
+                    print("Please enter a valid number or 'pass'.")
+
+        # Reset players to original order for the next item
+        current_player = player1
+        other_player = player2
 
     print("\nAuction Over!")
     print("Final Collections:")
@@ -88,4 +114,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

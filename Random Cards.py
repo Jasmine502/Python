@@ -24,26 +24,30 @@ while 1 > 0:
 import random
 
 def main():
-    #Create a list of cards
-    cards = ['Ace of Spades', '2 of Spades', '3 of Spades', '4 of Spades', '5 of Spades', '6 of Spades', '7 of Spades', '8 of Spades', '9 of Spades', '10 of Spades', 'Jack of Spades', 'Queen of Spades', 'King of Spades',
-             'Ace of Hearts', '2 of Hearts', '3 of Hearts', '4 of Hearts', '5 of Hearts', '6 of Hearts', '7 of Hearts', '8 of Hearts', '9 of Hearts', '10 of Hearts', 'Jack of Hearts', 'Queen of Hearts', 'King of Hearts',
-             'Ace of Clubs', '2 of Clubs', '3 of Clubs', '4 of Clubs', '5 of Clubs', '6 of Clubs', '7 of Clubs', '8 of Clubs', '9 of Clubs', '10 of Clubs', 'Jack of Clubs', 'Queen of Clubs', 'King of Clubs',
-             'Ace of Diamonds', '2 of Diamonds', '3 of Diamonds', '4 of Diamonds', '5 of Diamonds', '6 of Diamonds', '7 of Diamonds', '8 of Diamonds', '9 of Diamonds', '10 of Diamonds', 'Jack of Diamonds', 'Queen of Diamonds', 'King of Diamonds']
-    #Create a list of the users hand
-    hand = []
-    #Ask the user how many cards they want
-    numCards = int(input('How many cards would you like? '))
-    #Validate the input
-    while numCards < 1 or numCards > 52:
-        print('Invalid input. Please enter a number between 1 and 52.')
-        numCards = int(input('How many cards would you like? '))
-    #Pick the cards
-    for i in range(numCards):
-        card = random.choice(cards)
-        hand.append(card)
-        cards.remove(card)
-    #Print the users hand
-    for i in range(numCards):
-        print(hand[i])
-while True:
-    main()
+    # Create a list of cards
+    suits = ['Spades', 'Hearts', 'Clubs', 'Diamonds']
+    ranks = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King']
+    cards = [f'{rank} of {suit}' for suit in suits for rank in ranks]
+
+    # Ask the user how many cards they want
+    while True:
+        try:
+            num_cards = int(input('How many cards would you like? '))
+            if 1 <= num_cards <= 52:
+                break
+            else:
+                print('Invalid input. Please enter a number between 1 and 52.')
+        except ValueError:
+            print('Invalid input. Please enter a valid number.')
+
+    # Pick the cards
+    hand = random.sample(cards, num_cards)
+
+    # Print the user's hand
+    print("Your Hand:")
+    for card in hand:
+        print(card)
+
+if __name__ == "__main__":
+    while True:
+        main()

@@ -19,18 +19,20 @@ import random
 
 def main():
     print("I will try to guess your number!")
-    print("Please enter a number between 1 and 10")
-    user_number = int(input())
-    ai_number = random.randint(1,10)
-    while ai_number != user_number:
-        print("AI guesses: " + str(ai_number))
-        print("Was I right? (y/n)")
-        response = input()
-        if response == "y":
+    user_number = int(input("Please enter a number between 1 and 10: "))
+    while True:
+        ai_number = random.randint(1, 10)
+        print(f"AI guesses: {ai_number}")
+        if ai_number == user_number:
             print("Yay! I win!")
             break
         else:
-            ai_number = random.randint(1,10)
+            print("Was I right? (y/n)")
+            response = input().strip().lower()
+            if response == "y":
+                print("Yay! I win!")
+                break
     print("Thanks for playing with me! You mean a lot to me!")
 
-main()
+if __name__ == "__main__":
+    main()
