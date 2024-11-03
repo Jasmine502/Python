@@ -2,12 +2,20 @@
     "294589366599417856": {
         "inventory": [
             {
-                "name": "Pato",
+                "name": "Gala",
                 "type": "character",
-                "rarity": "uncommon",
-                "ability1": "Quack",
-                "ability2": "Stab",
-                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/9/94/UGacha_Temp.png/revision/latest?cb=20240122160714"
+                "rarity": "rare",
+                "ability1": "Gossip",
+                "ability2": "Tease",
+                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/b/bf/UNAGacha_Gala.png/revision/latest?cb=20240914154722"
+            },
+            {
+                "name": "Brooks",
+                "type": "character",
+                "rarity": "rare",
+                "ability1": "Blow",
+                "ability2": "Pail Smash",
+                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/3/36/UNAGacha_Brooks.png/revision/latest?cb=20240914145624"
             }
         ]
     }

@@ -12,7 +12,7 @@ intents = discord.Intents.default()
 intents.messages = True
 intents.guilds = True
 intents.message_content = True
-bot = commands.Bot(command_prefix='.', intents=intents)
+bot = commands.Bot(command_prefix='.', intents=intents, help_command=None)
 
 # Rarity configurations
 rarity_weights = {'common': 50, 'uncommon': 30, 'rare': 15, 'epic': 4, 'legendary': 1}
@@ -66,7 +66,12 @@ async def gacha(ctx):
         user_id = str(ctx.author.id)
         user_data.setdefault(user_id, {'inventory': []})['inventory'].append(card)
         save_user_data(user_data)
-        await ctx.send(f'Card added to your inventory: {card["name"]}')
+        embed = discord.Embed(
+            title="Card Added!",
+            description=f"✅ Card added to your inventory: **{card['name']}**",
+            color=rarity_colors.get(card['rarity'].lower(), 0xCCCCCC)
+        )
+        await ctx.send(embed=embed)
 
 class CardMenu(menus.Menu):
     def __init__(self, cards, *args, **kwargs):
@@ -135,5 +140,63 @@ async def on_command_error(ctx, error):
     else:
         raise error
 
+# New reset command
+@bot.command()
+async def reset(ctx):
+    user_id = str(ctx.author.id)
+    user_inventory = user_data.get(user_id, {}).get('inventory', [])
+    
+    if not user_inventory:
+        await ctx.send("Your inventory is already empty.")
+        return
+
+    embed = discord.Embed(
+        title="Confirm Reset",
+        description="Are you sure you want to clear your inventory?",
+        color=0xFFCC33
+    )
+    message = await ctx.send(embed=embed)
+
+    await message.add_reaction('✅')
+    await message.add_reaction('❌')
+
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ['✅', '❌'] and reaction.message.id == message.id
+
+    try:
+        reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send('Time out. Reset cancelled.')
+    else:
+        if str(reaction.emoji) == '✅':
+            user_data[user_id]['inventory'] = []
+            save_user_data(user_data)
+            await ctx.send(embed=discord.Embed(
+                title="Inventory Cleared!",
+                description="Your inventory has been successfully cleared.",
+                color=0xFF0000
+            ))
+        else:
+            await ctx.send(embed=discord.Embed(
+                title="Reset Cancelled",
+                description="Your inventory remains unchanged.",
+                color=0xFFCC33
+            ))
+
+# Custom help command
+@bot.command(name='help', aliases=['commands'])
+async def help_command(ctx):
+    embed = discord.Embed(
+        title="Available Commands",
+        description="Here are the commands you can use:",
+        color=0x66CCFF
+    )
+    embed.add_field(name=".gacha", value="Pull a card from the gacha.", inline=False)
+    embed.add_field(name=".inventory", value="View your card inventory.", inline=False)
+    embed.add_field(name=".reset", value="Clear your inventory after confirmation.", inline=False)
+    embed.set_footer(text="Use the commands wisely!")
+    
+    await ctx.send(embed=embed)
+
 # MTE4Mjk5NjE5MDIyMTA2MjE4NQ.GYNBFs.UbPEh3zECZ1RK7EXSdm2FMAi_Ee-dm3PrxPvWg
-bot.run('MTE4Mjk5NjE5MDIyMTA2MjE4NQ.GYNBFs.UbPEh3zECZ1RK7EXSdm2FMAi_Ee-dm3PrxPvWg')
+bot.run('')
