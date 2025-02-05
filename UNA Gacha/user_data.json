@@ -16,6 +16,22 @@
                 "ability1": "Blow",
                 "ability2": "Pail Smash",
                 "artwork": "https://static.wikia.nocookie.net/welcometouna/images/3/36/UNAGacha_Brooks.png/revision/latest?cb=20240914145624"
+            },
+            {
+                "name": "Q",
+                "type": "character",
+                "rarity": "common",
+                "ability1": "Obey",
+                "ability2": "Trust",
+                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/a/ae/UNAGacha_Q.png/revision/latest?cb=20240914160803"
+            },
+            {
+                "name": "Dustin",
+                "type": "character",
+                "rarity": "rare",
+                "ability1": "Diamonds!",
+                "ability2": "Overdose",
+                "artwork": "https://static.wikia.nocookie.net/welcometouna/images/2/2b/UNAGacha_Dustin.png/revision/latest?cb=20240914145855"
             }
         ]
     }
