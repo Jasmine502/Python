@@ -199,4 +199,4 @@ async def help_command(ctx):
     await ctx.send(embed=embed)
 
 # MTE4Mjk5NjE5MDIyMTA2MjE4NQ.GYNBFs.UbPEh3zECZ1RK7EXSdm2FMAi_Ee-dm3PrxPvWg
-bot.run('')
+bot.run('MTE4Mjk5NjE5MDIyMTA2MjE4NQ.GYNBFs.UbPEh3zECZ1RK7EXSdm2FMAi_Ee-dm3PrxPvWg')
