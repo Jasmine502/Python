@@ -201,8 +201,7 @@ class Game:
             Platform(80, WINDOW_HEIGHT - 120, 160, 20),   # 1st platform (player start)
             Platform(300, WINDOW_HEIGHT - 200, 160, 20),  # 2nd
             Platform(520, WINDOW_HEIGHT - 280, 160, 20),  # 3rd
-            Platform(300, WINDOW_HEIGHT - 360, 160, 20),  # 4th
-            Platform(520, WINDOW_HEIGHT - 440, 160, 20),  # 5th (goal)
+            Platform(600, WINDOW_HEIGHT - 440, 160, 20),  # 5th (goal, staggered right)
             Platform(0, WINDOW_HEIGHT - 40, WINDOW_WIDTH, 40),  # Ground
         ]
         
@@ -218,7 +217,7 @@ class Game:
         self.episode = 0
         self.max_episodes = 1000
         # Goal is on the last platform
-        self.goal_x = 520 + 80  # Center of last platform
+        self.goal_x = 600 + 80  # Center of last platform (staggered right)
         self.goal_y = WINDOW_HEIGHT - 440 - 10  # On top of last platform
         
         # Track which platforms have been reached for intermediate rewards
