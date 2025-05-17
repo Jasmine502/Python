@@ -95,7 +95,7 @@ class Player:
         elif self.x > WINDOW_WIDTH - self.width: self.x = WINDOW_WIDTH - self.width
         
         # Animation and visual fluff (can be disabled for speed)
-        if FPS > 0:
+        if FPS > 0: # Checks global FPS
             self.animation_timer += 1
             if self.animation_timer >= 5:
                 self.animation_timer = 0
@@ -122,7 +122,7 @@ class Player:
     
     def draw(self, screen):
         # Drawing is skipped if FPS is 0 (headless mode)
-        if FPS == 0:
+        if FPS == 0: # Checks global FPS
             return
 
         shadow_base_alpha = 80
@@ -183,6 +183,8 @@ class Platform:
 
 class Game:
     def __init__(self):
+        global FPS # Read initial global FPS to setup screen
+        self.screen = None # Initialize screen to None
         if FPS > 0:
             self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
             pygame.display.set_caption("Bungo Simulation")
@@ -200,56 +202,42 @@ class Game:
         self.players = []
         self.agents = []
         self.previous_xs = [0.0] * self.num_agents
-        self.last_actions = [0] * self.num_agents # Store last action for timeout update
-        self.platform_rewards_list = [] # To track if intermediate platform rewards were given
+        self.last_actions = [0] * self.num_agents 
+        self.platform_rewards_list = [] 
 
-        # Calculate state size based on bin definitions
         self.state_size = (X_POS_BINS * Y_POS_BINS * VEL_X_BINS * VEL_Y_BINS *
                            PLATFORM_PROX_LEFT_BINS * PLATFORM_PROX_RIGHT_BINS *
                            PLATFORM_PROX_BELOW_BINS)
-        self.action_size = 3 # Left, Right, Jump
+        self.action_size = 3 
         
         player_start_x_default = 100
-        player_start_y_default = WINDOW_HEIGHT - 150 # Start on the ground initially
+        player_start_y_default = WINDOW_HEIGHT - 150
 
         for i in range(self.num_agents):
-            alpha_val = int(255 * 0.10) if i < self.num_agents - 1 else 255 # Highlight one agent
+            alpha_val = int(255 * 0.10) if i < self.num_agents - 1 else 255 
             self.players.append(Player(player_start_x_default, player_start_y_default, alpha=alpha_val))
             self.agents.append(QLearningAgent(
-                state_size=self.state_size,
-                action_size=self.action_size,
-                learning_rate=0.1, # Standard LR
-                discount_factor=0.99, # Prioritize future rewards
-                exploration_rate=1.0, # Start with full exploration
-                exploration_decay_rate=0.998, # Slower decay for larger state space
-                min_exploration_rate=0.1,
-                # Pass game physics and discretization parameters
-                move_speed=MOVE_SPEED,
-                jump_power=JUMP_POWER,
-                gravity=GRAVITY,
-                x_pos_bins=X_POS_BINS,
-                y_pos_bins=Y_POS_BINS,
-                vel_x_bins=VEL_X_BINS,
-                vel_y_bins=VEL_Y_BINS,
-                plat_prox_left_bins=PLATFORM_PROX_LEFT_BINS,
-                plat_prox_right_bins=PLATFORM_PROX_RIGHT_BINS,
+                state_size=self.state_size, action_size=self.action_size,
+                learning_rate=0.1, discount_factor=0.99, exploration_rate=1.0,
+                exploration_decay_rate=0.998, min_exploration_rate=0.1,
+                move_speed=MOVE_SPEED, jump_power=JUMP_POWER, gravity=GRAVITY,
+                x_pos_bins=X_POS_BINS, y_pos_bins=Y_POS_BINS, vel_x_bins=VEL_X_BINS, vel_y_bins=VEL_Y_BINS,
+                plat_prox_left_bins=PLATFORM_PROX_LEFT_BINS, plat_prox_right_bins=PLATFORM_PROX_RIGHT_BINS,
                 plat_prox_below_bins=PLATFORM_PROX_BELOW_BINS,
                 horizontal_sensor_range=HORIZONTAL_SENSOR_RANGE,
                 vertical_sensor_range_sides=VERTICAL_SENSOR_RANGE_SIDES,
                 vertical_sensor_range_below=VERTICAL_SENSOR_RANGE_BELOW
             ))
-            self.platform_rewards_list.append([False] * (len(self.platforms) - 1)) # Exclude ground
+            self.platform_rewards_list.append([False] * (len(self.platforms) - 1))
             self.previous_xs[i] = player_start_x_default
         
         self.episode = 0
-        # self.max_episodes = 1000 # REMOVED: No longer limiting episodes
-        self.goal_x = 600 + 80 # Center of the goal platform
-        self.goal_y = WINDOW_HEIGHT - 440 - 10 # Slightly above the goal platform
+        self.goal_x = 600 + 80 
+        self.goal_y = WINDOW_HEIGHT - 440 - 10 
         self.episode_start_time = time.time()
 
-        # Visuals for lava (can be skipped if FPS=0)
         self.lava_bubbles = []
-        if FPS > 0:
+        if FPS > 0: # Check initial FPS for lava bubbles
             self.lava_bubbles = [{'x': random.randint(0, WINDOW_WIDTH), 'y': WINDOW_HEIGHT - 40 + random.randint(10, 35), 'r': random.randint(4, 10), 't': random.uniform(0, 2 * math.pi)} for _ in range(18)]
         self.lava_anim_frame = 0
     
@@ -257,64 +245,47 @@ class Game:
         player = self.players[player_idx]
         prev_x = self.previous_xs[player_idx]
         player_platform_rewards = self.platform_rewards_list[player_idx]
-
-        reward = -0.05  # Small penalty per step to encourage efficiency
-
-        # Reward for moving right (towards the goal)
-        if player.x > prev_x:
-            reward += 0.02
-        
-        # Reward for landing on intermediate platforms (once per platform per episode)
-        for i, platform in enumerate(self.platforms[:-1]): # Exclude ground/lava
+        reward = -0.05
+        if player.x > prev_x: reward += 0.02
+        for i, platform in enumerate(self.platforms[:-1]):
             if not player_platform_rewards[i] and \
                player.check_collision(platform) and player.on_ground and \
-               abs(player.y + player.height - platform.y) < 1: # Ensure landed on top
-                # Check if this is the goal platform (platform index 3)
-                if i == 3: # Assuming the goal platform is the 4th in the list (index 3)
-                    # This reward is now handled by the goal check below
-                    pass
-                else:
-                    reward += 10 
+               abs(player.y + player.height - platform.y) < 1:
+                if i == 3: pass
+                else: reward += 10 
                 player_platform_rewards[i] = True 
-        
-        # Penalty for falling into lava (ground platform)
         ground_platform = self.platforms[-1]
         if player.y + player.height >= ground_platform.y and \
            player.x + player.width > ground_platform.x and \
            player.x < ground_platform.x + ground_platform.width:
-            return True, -200 # Terminal state: fell in lava
-        
-        # Penalty for falling out of bounds (bottom of screen)
-        if player.y > WINDOW_HEIGHT:
-            return True, -100 # Terminal state: fell off screen
-        
-        # Reward for reaching the goal
-        goal_platform_idx = 3 # The goal platform is the 4th one (index 3)
+            return True, -200 
+        if player.y > WINDOW_HEIGHT: return True, -100
+        goal_platform_idx = 3
         goal_platform_obj = self.platforms[goal_platform_idx]
         if (player.x + player.width > goal_platform_obj.x and
             player.x < goal_platform_obj.x + goal_platform_obj.width and
             abs(player.y + player.height - goal_platform_obj.y) < 1 and player.on_ground):
-            return True, 200 # Terminal state: reached goal
-
-        return False, reward # Not a terminal state, continue episode
+            return True, 200
+        return False, reward
     
     def reset_episode(self):
         player_start_x_default = 100
         player_start_y_default = WINDOW_HEIGHT - 150 
         for i in range(self.num_agents):
-            preserved_alpha = self.players[i].alpha # Keep visual distinction
+            preserved_alpha = self.players[i].alpha
             self.players[i] = Player(player_start_x_default, player_start_y_default, alpha=preserved_alpha)
             self.previous_xs[i] = self.players[i].x
             self.platform_rewards_list[i] = [False] * (len(self.platforms) - 1)
         self.episode_start_time = time.time()
     
     def run(self):
-        while True: # MODIFIED: Run indefinitely until manually closed
+        global FPS # Declare that this method will modify the global FPS variable
+
+        while True: 
             self.reset_episode()
-            episode_is_done_for_all_agents = False # Track if episode should end for ML logic
-            active_agents_this_episode = [True] * self.num_agents # Track which agents are still active
+            episode_is_done_for_all_agents = False 
+            active_agents_this_episode = [True] * self.num_agents 
             
-            # Exploration rate boost at certain episodes
             if (150 < self.episode < 350 or self.episode % 150 == 0 and self.episode > 0):
                  for agent in self.agents:
                     agent.exploration_rate = max(agent.exploration_rate, 0.25)
@@ -322,43 +293,48 @@ class Game:
             current_episode_step_count = 0
             while not episode_is_done_for_all_agents:
                 current_episode_step_count +=1
-                if FPS > 0: # Only handle events if visualizing
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT: pygame.quit(); sys.exit()
                 
-                # Check for timeout
+                # Always process events to keep window responsive and allow mode switching/quitting
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_1:
+                            if FPS == 0: # If changing from headless to visual
+                                FPS = 60
+                                if self.screen is None: # Ensure screen is initialized
+                                    self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+                                    pygame.display.set_caption("Bungo Simulation")
+                                # Re-initialize lava bubbles if they weren't due to starting headless
+                                if not self.lava_bubbles:
+                                     self.lava_bubbles = [{'x': random.randint(0, WINDOW_WIDTH), 'y': WINDOW_HEIGHT - 40 + random.randint(10, 35), 'r': random.randint(4, 10), 't': random.uniform(0, 2 * math.pi)} for _ in range(18)]
+                                print(f"FPS set to {FPS}. Visuals enabled.")
+                            elif FPS != 60: # If already visual but not 60 FPS (e.g. some other debug FPS)
+                                FPS = 60
+                                print(f"FPS set to {FPS}.")
+                        elif event.key == pygame.K_0:
+                            if FPS != 0: # If changing from visual to headless
+                                FPS = 0
+                                print(f"FPS set to {FPS}. Visuals disabled (headless mode).")
+                
                 timed_out = time.time() - self.episode_start_time > EPISODE_TIMEOUT
-                if timed_out:
-                    episode_is_done_for_all_agents = True
-
-                # If all agents have reached a terminal state individually
-                if not any(active_agents_this_episode):
-                    episode_is_done_for_all_agents = True
-
-                if episode_is_done_for_all_agents:
-                    break
+                if timed_out: episode_is_done_for_all_agents = True
+                if not any(active_agents_this_episode): episode_is_done_for_all_agents = True
+                if episode_is_done_for_all_agents: break
 
                 for i in range(self.num_agents):
-                    if not active_agents_this_episode[i]:
-                        continue # Skip agents that have finished their part of the episode
-
+                    if not active_agents_this_episode[i]: continue
                     player = self.players[i]; agent = self.agents[i]
-                    
                     current_state = agent.get_state_index(
                         player.x, player.y, player.width, player.height, 
                         player.velocity_x, player.velocity_y, self.platforms
                     )
                     action = agent.get_action(current_state)
-                    self.last_actions[i] = action # Store action for timeout update
-
-                    player.move(action)
-                    player.update(self.platforms)
-                    
+                    self.last_actions[i] = action
+                    player.move(action); player.update(self.platforms)
                     player_reached_terminal_state, reward = self.get_reward(i)
-
-                    if player_reached_terminal_state:
-                        active_agents_this_episode[i] = False # This agent is done
-
+                    if player_reached_terminal_state: active_agents_this_episode[i] = False
                     next_state = agent.get_state_index(
                         player.x, player.y, player.width, player.height,
                         player.velocity_x, player.velocity_y, self.platforms
@@ -366,79 +342,69 @@ class Game:
                     agent.update(current_state, action, reward, next_state, player_reached_terminal_state)
                     self.previous_xs[i] = player.x
                 
-                # --- Drawing Start (skipped if FPS=0) ---
                 if FPS > 0:
-                    self.screen.fill(WHITE) # Clear screen
-                    # Background gradient
+                    if self.screen is None: # Fallback screen initialization
+                        self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+                        pygame.display.set_caption("Bungo Simulation")
+                        if not self.lava_bubbles: # Fallback for lava bubbles
+                             self.lava_bubbles = [{'x': random.randint(0, WINDOW_WIDTH), 'y': WINDOW_HEIGHT - 40 + random.randint(10, 35), 'r': random.randint(4, 10), 't': random.uniform(0, 2 * math.pi)} for _ in range(18)]
+
+
+                    self.screen.fill(WHITE) 
                     for i_bg in range(WINDOW_HEIGHT):
                         color_val = (int(180 + 40 * (i_bg/WINDOW_HEIGHT)), int(220 - 60 * (i_bg/WINDOW_HEIGHT)), int(255 - 80 * (i_bg/WINDOW_HEIGHT)))
                         pygame.draw.line(self.screen, color_val, (0, i_bg), (WINDOW_WIDTH, i_bg))
-
-                    # Draw platforms
                     for idx, platform in enumerate(self.platforms):
                         plat_shadow = pygame.Surface((platform.width, 8), pygame.SRCALPHA); pygame.draw.ellipse(plat_shadow, (50,50,50,60), (0,0,platform.width,8)); self.screen.blit(plat_shadow, (platform.x, platform.y+platform.height-2))
-                        if idx == len(self.platforms) - 1: # Lava platform
+                        if idx == len(self.platforms) - 1: 
                             pygame.draw.rect(self.screen, (220, 60, 20), (platform.x, platform.y, platform.width, platform.height))
                             for x_lava in range(platform.x, platform.x + platform.width, 20):
                                 wave_y = platform.y + 20 + int(8 * math.sin(self.lava_anim_frame*0.1 + x_lava*0.05)); pygame.draw.ellipse(self.screen, (255,120,40), (x_lava,wave_y,20,12))
-                            for bubble in self.lava_bubbles:
-                                bubble['y'] -= 0.7 + 0.5*math.sin(self.lava_anim_frame*0.1 + bubble['t'])
-                                if bubble['y'] < platform.y+5: bubble['x']=random.randint(platform.x,platform.x+platform.width); bubble['y']=platform.y+platform.height-random.randint(0,10); bubble['r']=random.randint(4,10); bubble['t']=random.uniform(0,2*math.pi)
-                                pygame.draw.circle(self.screen, (255,200,80), (int(bubble['x']),int(bubble['y'])), bubble['r'])
+                            if self.lava_bubbles: # Ensure lava_bubbles list exists
+                                for bubble in self.lava_bubbles:
+                                    bubble['y'] -= 0.7 + 0.5*math.sin(self.lava_anim_frame*0.1 + bubble['t'])
+                                    if bubble['y'] < platform.y+5: bubble['x']=random.randint(platform.x,platform.x+platform.width); bubble['y']=platform.y+platform.height-random.randint(0,10); bubble['r']=random.randint(4,10); bubble['t']=random.uniform(0,2*math.pi)
+                                    pygame.draw.circle(self.screen, (255,200,80), (int(bubble['x']),int(bubble['y'])), bubble['r'])
                             pygame.draw.rect(self.screen, (255,180,80), (platform.x,platform.y,platform.width,8)); pygame.draw.rect(self.screen, (100,30,10), (platform.x,platform.y,platform.width,platform.height),3,border_radius=6)
-                        else: # Normal platforms
+                        else: 
                             plat_color=(110,90,60); grass_color=(60,180,60); pygame.draw.rect(self.screen, plat_color, (platform.x,platform.y,platform.width,platform.height),border_radius=6); pygame.draw.rect(self.screen, grass_color, (platform.x,platform.y,platform.width,8),border_radius=6); pygame.draw.rect(self.screen, (180,160,100), (platform.x,platform.y+platform.height-6,platform.width,6),border_radius=6); pygame.draw.rect(self.screen, (60,40,20), (platform.x,platform.y,platform.width,platform.height),2,border_radius=6)
-                    
-                    # Draw players
                     for p_obj in self.players: p_obj.draw(self.screen)
-                    
-                    # Draw goal visual
-                    goal_platform_obj = self.platforms[3] # Goal platform
+                    goal_platform_obj = self.platforms[3] 
                     goal_center_x = goal_platform_obj.x + goal_platform_obj.width / 2
-                    goal_center_y = goal_platform_obj.y - 15 # Visual above platform
+                    goal_center_y = goal_platform_obj.y - 15 
                     gem_surface=pygame.Surface((32,32),pygame.SRCALPHA); pygame.draw.polygon(gem_surface,(80,255,180,220),[(16,0),(32,8),(28,32),(4,32),(0,8)]); pygame.draw.polygon(gem_surface,(180,255,255,180),[(16,4),(28,10),(25,28),(7,28),(4,10)]); pygame.draw.ellipse(gem_surface,(255,255,255,120),(8,6,8,6)); self.screen.blit(gem_surface,(goal_center_x-16,goal_center_y-16))
                     if(self.lava_anim_frame//20)%2==0: pygame.draw.ellipse(self.screen,(255,255,255,90),(goal_center_x-7,goal_center_y-13,14,8))
                     pygame.draw.polygon(self.screen,(0,80,60),[(goal_center_x,goal_center_y-16),(goal_center_x+16,goal_center_y-8),(goal_center_x+12,goal_center_y+16),(goal_center_x-12,goal_center_y+16),(goal_center_x-16,goal_center_y-8)],2)
-                    
-                    # UI Text (Episode, Time)
-                    font=pygame.font.Font(None,40); time_left=max(0,EPISODE_TIMEOUT-(time.time()-self.episode_start_time)); text_str=f"Ep: {self.episode} St: {current_episode_step_count} T: {time_left:.1f}s"; text_render=font.render(text_str,True,(255,220,80)); outline_render=font.render(text_str,True,(60,40,20))
+                    font=pygame.font.Font(None,40); time_left=max(0,EPISODE_TIMEOUT-(time.time()-self.episode_start_time)); text_str=f"Ep: {self.episode} St: {current_episode_step_count} T: {time_left:.1f}s FPS: {FPS}"; text_render=font.render(text_str,True,(255,220,80)); outline_render=font.render(text_str,True,(60,40,20))
                     for dx_o,dy_o in[(-2,0),(2,0),(0,-2),(0,2)]: self.screen.blit(outline_render,(12+dx_o,12+dy_o))
                     self.screen.blit(text_render,(12,12))
-                    
                     pygame.display.flip()
                     self.lava_anim_frame+=1
-                # --- Drawing End ---
                 
                 if FPS > 0:
                     self.clock.tick(FPS)
+                else: # Run as fast as possible in headless mode
+                    self.clock.tick(0) 
             
-            # Post-episode processing (e.g., for timeouts)
             if timed_out:
                 for i in range(self.num_agents):
-                    if active_agents_this_episode[i]: # If agent was still active when timeout occurred
+                    if active_agents_this_episode[i]: 
                         player = self.players[i]; agent = self.agents[i]
-                        # Calculate distance to goal as a heuristic for timeout penalty
                         dist_to_goal = math.sqrt((player.x - self.goal_x)**2 + (player.y - self.goal_y)**2)
-                        penalty = -min(50, int(dist_to_goal / 10)) # Scaled penalty, capped
-                        
+                        penalty = -min(50, int(dist_to_goal / 10)) 
                         timeout_state = agent.get_state_index(
                             player.x, player.y, player.width, player.height,
                             player.velocity_x, player.velocity_y, self.platforms
                         )
-                        # Update Q-table using the last action that led to this timeout state
-                        agent.update(timeout_state, self.last_actions[i], penalty, timeout_state, True) # True for terminal
+                        agent.update(timeout_state, self.last_actions[i], penalty, timeout_state, True) 
             
             self.episode += 1
             for agent in self.agents: 
-                agent.decay_exploration_rate() # Decay exploration rate for all agents
+                agent.decay_exploration_rate() 
             
             if self.episode % 10 == 0:
                 avg_exp_rate = sum(ag.exploration_rate for ag in self.agents) / self.num_agents
                 print(f"Episode: {self.episode}, Avg Exploration Rate: {avg_exp_rate:.2f}")
-                # Optional: Save Q-tables periodically
-                # for idx, ag in enumerate(self.agents):
-                #     if idx == self.num_agents -1 : # Save only the "main" agent
-                #         ag.save_q_table(f"q_table_agent_main_ep{self.episode}.npy")
 
 if __name__ == "__main__":
     game = Game()
